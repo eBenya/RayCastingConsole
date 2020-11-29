@@ -7,19 +7,33 @@ namespace RayCastingEng
     {
         private readonly double rotationSpeed = 0.1;
         private readonly double moveSpeed = 1.0;
-        public static readonly double FOV = Math.PI/3;
-        public Player(double x, double y, 
+        /// <summary>
+        /// FieldOfView, hte field(angle) of view. The dimention in radian.
+        /// </summary>
+        public double FOV { get; private set; }
+        public double Depht { get; private set; }
+        /// <summary>
+        /// Player possition  on the X-axis
+        /// </summary>
+        public double X { get; private set; }
+        /// <summary>
+        /// Player possition on the Y=axis
+        /// </summary>
+        public double Y { get; private set; }
+        /// <summary>
+        /// PointOfView, the direction of view. The dimention in radian.
+        /// </summary>
+        public double POV { get; private set; }
+
+        public Player(double x, double y,
                       double depht = 16.0, double angle = 0)
         {
             Depht = depht;
             X = x;
             Y = y;
             POV = angle;
+            FOV = Math.PI / 3;
         }
-        public double Depht { get; private set; }
-        public double X { get; private set; }
-        public double Y { get; private set; }
-        public double POV { get; private set; }
 
         /// <summary>
         /// Change person direction.
@@ -32,10 +46,12 @@ namespace RayCastingEng
         {
             POV += powerDir * rotationSpeed;
         }
-        public double GetDeegreePOV()
+
+        public double GetPOVInDeegree()
         {
             return (POV * 180 / Math.PI) % 360;
         }
+
         /// <summary>
         /// Change person possition.
         /// </summary>
