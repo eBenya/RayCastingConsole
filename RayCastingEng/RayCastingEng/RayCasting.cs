@@ -13,7 +13,7 @@ namespace RayCastingEng
         internal Player player;
         internal bool tooglRender;
 
-        private Render2D render2D;
+        private IRender render2D;
 
         public RayCasting(int mapWidth = 32, int mapHeiht = 32, 
             double playerX = 2.0, double playerY = 2.0)

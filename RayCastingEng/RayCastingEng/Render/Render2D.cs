@@ -1,17 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 
 namespace RayCastingEng.Render
 {
-    class Render2D
+    class Render2D : IRender
     {
         private const double step = 0.5;
         private readonly Map map;
         private Player player;
         public char[] buff;
+
         private List<Point> possitionsLinePOV;
+        public List<List<Point>> PointsOfAllRay { get; private set; }
         private List<Point> whatISeeList;
         public Render2D(Player p, Map m)
         {
@@ -20,18 +23,41 @@ namespace RayCastingEng.Render
             buff = new char[map.Width * map.Height];
             possitionsLinePOV = new List<Point>();
             whatISeeList = new List<Point>();
+            PointsOfAllRay = new List<List<Point>>();
         }
-        //TODO: Rename this method as GetLineOfSightCoord. And create iterative method that will remember FOV possitions
+
         private List<Point> GetAllPointWhatISee()
         {
             whatISeeList.Clear();
-            double segment = player.FOV / 2;
-            foreach (var item in possitionsLinePOV)
+            if (PointsOfAllRay != null && PointsOfAllRay.Count>0)
             {
-                whatISeeList.Add(item);
+                foreach (var item in PointsOfAllRay)
+                {
+                    whatISeeList.AddRange(item);
+                }
+            }
+            
+            return whatISeeList;
+        }
+
+        //TODO: It`s a separate, independent entity
+        private List<List<Point>> GetAllPointsOfRay(int xPos, int yPos, double pov, double fov, double playerDepht)
+        {
+            PointsOfAllRay.Clear();
+
+            //Number of rays - will be the lenght of the arc of the circle.
+            int numberOfIteration = (int)(fov * playerDepht);
+            double currentAngle = (pov - fov / 2);
+            double step = fov / numberOfIteration;
+
+            //Складируем все точки до которых дотянулись лучи
+            for (int i = 0; i < numberOfIteration; i++)
+            {
+                PointsOfAllRay.Add(GetPossitionsLinePOV(xPos, yPos, currentAngle, playerDepht));
+                currentAngle += step;
             }
 
-            return whatISeeList;
+            return PointsOfAllRay;
         }
 
         private List<Point> GetPossitionsLinePOV()
@@ -54,7 +80,7 @@ namespace RayCastingEng.Render
                     break;
                 }
             }
-            return possitionsLinePOV;
+            return possitionsLinePOV.Distinct().ToList();
         }
         private List<Point> GetPossitionsLinePOV(int x, int y, double pov, double playerDepht)
         {
@@ -76,7 +102,7 @@ namespace RayCastingEng.Render
                     break;
                 }
             }
-            return line;
+            return line.Distinct().ToList();
         }
 
         private int GetIndexArray(int x, int y)
@@ -94,7 +120,8 @@ namespace RayCastingEng.Render
             }
         }
         public void Show()
-        {
+        {         
+
             possitionsLinePOV = GetPossitionsLinePOV((int)player.X, (int)player.Y, player.POV, player.Depht);
             StringBuilder sb = new StringBuilder(map.Width * map.Height);
 
@@ -108,6 +135,18 @@ namespace RayCastingEng.Render
             {
                 sb.Replace((char)MapLegend.space, '0', item.Y * map.Width + item.X, 1);
             }
+
+            #region Experemental
+
+            GetAllPointsOfRay((int)player.X, (int)player.Y, player.POV, player.FOV, player.Depht);
+            GetAllPointWhatISee();
+
+            foreach (var item in whatISeeList)
+            {
+                sb.Replace((char)MapLegend.space, '0', item.Y * map.Width + item.X, 1);
+            }
+
+            #endregion
 
             //Add possition info
             sb.Append($"\nX: {player.X:f4}; Y: {player.Y:f4}; POV: {player.GetPOVInDeegree():f4}");
